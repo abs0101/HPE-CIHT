@@ -153,10 +153,14 @@ Task 2: Launching a Nginx container mapped to a specific docker volume and verif
 docker run -d -p 80:80 --name=nginx-container --mount src=ct-volume1,dst=/usr/share/nginx/html nginx
 docker ps
 docker container inspect nginx-container
+sudo su
 ls /var/lib/docker/volumes/ct-volume1/_data/ 
 cd /var/lib/docker/volumes/ct-volume1/_data/ 
 touch f1 f2 f3
 vi /var/lib/docker/volumes/ct-volume1/_data/index.html
+# press i to modify content
+# press "Esc" to comeout from insert mode
+# press :wq to save or :q! to save without changes
 
 Task 3: Deleting container and attaching the volume to another container
 
