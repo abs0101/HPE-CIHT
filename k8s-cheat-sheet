@@ -399,7 +399,7 @@ spec:
     spec:
       containers:
       - name: fluentd-ctr
-        image: fluent/fluentd
+        image: fluent/fluentd:v1.16
 
 -----------------------------------------------
 
