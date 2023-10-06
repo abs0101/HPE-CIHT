@@ -369,15 +369,6 @@ kubectl get deployments
 kubectl get pods
 
 
-
------------------------------------------------------------------------------
-Task 5: Deployment Auto Scaling HPA – Horizontal Pod 
-Autoscaling
------------------------------------------------------------------------------
-kubectl autoscale deployment nginx-dep --min=3 --max=8 --cpu-percent=70
-
-kubectl get hpa
-
 -----------------------------------------------------------------------------
 #Task 6 Cleanup the resources using below command
 -----------------------------------------------------------------------------
@@ -667,5 +658,9 @@ kubectl delete pvc --all
 
 
 *****************Delete Cluster*********************************
+. ./delete-kops.sh   
+
+or
+
 kops get cluster
 kops delete cluster --name <cluster-naame> --state s3://<cluster-naame> --yes
