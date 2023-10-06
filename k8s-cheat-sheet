@@ -440,6 +440,7 @@ kubectl get nodes --show-labels | grep kubernetes.io/hostname
 
 # make a note of the kubernetes.io/hostname label of one of the nodes
 
+kubectl get node -o wide ( run this to get the <node_public_IP )
 
 # ssh to one of the nodes using below
 
