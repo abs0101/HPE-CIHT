@@ -435,7 +435,7 @@ Lab 5: Persistent Volume in Kubernetes
 
 # View worker nodes and their labels
 
-kubectl get nodes --show-labels | grep role=node
+kubectl get nodes --show-labels | grep kubernetes.io/hostname
 
 
 # make a note of the kubernetes.io/hostname label of one of the nodes
