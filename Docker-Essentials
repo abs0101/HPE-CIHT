@@ -88,7 +88,7 @@ cd htdocs
 apt update
 apt install wget -y
 rm index.html
-wget files.cloudthat.training/devops/docker-essentials/index.html
+echo "Welcome to Docker Training" > index.html
 exit
 docker commit < replace container id/name > myhttpd:version1
 docker image ls
