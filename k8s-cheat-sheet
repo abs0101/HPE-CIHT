@@ -22,7 +22,7 @@ sudo hostnamectl set-hostname kops
 
 bash
 
-wget https://kops-script.s3.amazonaws.com/kops-v1.25.sh
+wget https://s3.ap-south-1.amazonaws.com/files.cloudthat.training/devops/kubernetes-essentials/kops-v1.25.sh
 
 . ./kops-v1.25.sh
 
