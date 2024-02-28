@@ -108,6 +108,82 @@ kubectl apply -f wordpress.yaml
 kubectl apply -f mysql.yaml
 
 
+
+-------------------------------------------------------------Azure-Key-Vault------------------------------------------------------------
+
+az keyvault create --name kube-demo-kv --resource-group k8s --location centralindia
+
+az keyvault secret set --vault-name kube-demo-kv --name mysql-password --value Test123
+
+az aks enable-addons --addons azure-keyvault-secrets-provider --name kube-demo --resource-group k8s
+
+az vmss identity show -g MC_k8s_kube-demo_eastus -n kube-demo-agentpool -o yaml
+
+az keyvault set-policy -n kube-demo-kv-1 --secret-permissions get --spn bf7141ad-ceba-467d-80fa-ec19f26f8b2c
+
+
+
+# This is a SecretProviderClass example using system-assigned identity to access your key vault
+
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: azure-kvname-system-msi
+spec:
+  provider: azure
+  parameters:
+    usePodIdentity: "false"
+    useVMManagedIdentity: "true"    # Set to true for using managed identity
+    userAssignedIdentityID: "bf7141ad-ceba-467d-80fa-ec19f26f8b2c"      # If empty, then defaults to use the system assigned identity on the VM
+    keyvaultName: kube-demo-kv-1
+    cloudName: "AzurePublicCloud"   # [OPTIONAL for Azure] if not provided, the Azure environment defaults to AzurePublicCloud
+    objects:  |
+      array:
+        - |
+          objectName: mysql-password
+          objectType: secret        # object types: secret, key, or cert
+          objectVersion: ""         # [OPTIONAL] object versions, default to latest if empty
+    tenantId: e08f8953-3554-4910-80b6-a247b4aff33c          # The tenant ID of the key vault
+
+
+
+
+
+# This is a sample pod definition for using SecretProviderClass and system-assigned identity to access your key vault
+
+kind: Pod
+apiVersion: v1
+metadata:
+  name: busybox-secrets-store-inline-system-msi
+spec:
+  containers:
+    - name: busybox
+      image: k8s.gcr.io/e2e-test-images/busybox:1.29-1
+      command:
+        - "/bin/sleep"
+        - "10000"
+      volumeMounts:
+      - name: secrets-store01-inline
+        mountPath: "/mnt/secrets-store"
+        readOnly: true
+  volumes:
+    - name: secrets-store01-inline
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: "azure-kvname-system-msi"
+
+
+## show secrets held in secrets-store 
+
+kubectl exec busybox-secrets-store-inline-system-msi -- ls /mnt/secrets-store/ 
+ 
+## print a test secret 'ExampleSecret' held in secrets-store
+ 
+kubectl exec busybox-secrets-store-inline-system-msi -- cat /mnt/secrets-store/mysql-password
+
+
 kubectl -n network-demo get all
 
 kubectl -n network-demo get ep wordpress-mysql
