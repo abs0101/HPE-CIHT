@@ -1,33 +1,3 @@
-Kubernetes Essentials
-=============================================================
-Lab 1: Kubernetes Operations(kops) on AWS
-=============================================================
-
-##Task 1: Launching an EC2 Instance
-#create an EC2 Instance
-Ubuntu Server22.04 LTS (HVM), SSD Volume type
-t2.micro
-
-##Task 2: Create an IAM role
-#create an IAM role for your instance as kops-admin-role with AdministratorAccess policy
-
-##Now, attach the IAM kops-admin-role to your EC2 instance kops by following these steps:
-1. First select EC2 instance kops.
-2. Next click on Action > Security > Modify IAM role
-3. Search   for kops-admin role, select it and click Update IAM role
-
-##Task 3: Setting up a Kubernetes Cluster
-
-sudo hostnamectl set-hostname kops
-
-bash
-
-wget https://s3.ap-south-1.amazonaws.com/files.cloudthat.training/devops/kubernetes-essentials/kops-v1.25.sh
-
-. ./kops-v1.25.sh
-
-kops validate cluster
-
 =============================================================
 Lab 2: Services in Kubernetes
 =============================================================
