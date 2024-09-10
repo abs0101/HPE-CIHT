@@ -1,8 +1,161 @@
 =============================================================
 Lab 2: Services in Kubernetes
 =============================================================
+
 ---------------------------------------------------------------
-# Task 1 Create a pod using below yaml
+# Task 1 Create a initcontainer pod using below yaml
+---------------------------------------------------------------
+vi initcontainer.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: myapp-container
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+  initContainers:
+  - name: init-myservice
+    image: busybox:1.28
+    command: ['sh', '-c', "until nslookup myservice.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for myservice; sleep 2; done"]
+  - name: init-mydb
+    image: busybox:1.28
+    command: ['sh', '-c', "until nslookup mydb.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for mydb; sleep 2; done"]
+
+
+# Now see the status of pod by running following commands
+
+kubectl get pod
+
+# create dependencies of pod
+
+vi init-containers-dependencies.yaml
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myservice
+spec:
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9376
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mydb
+spec:
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9377
+
+# Now see the status of pod by running following commands
+
+kubectl get pod
+
+---------------------------------------------------------------
+# Task 2 Create a MultiContainer pod using below yaml
+---------------------------------------------------------------
+
+vi sidecar.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sidecar
+spec:
+  volumes:
+  - name: shared-logs 
+    emptyDir: {}
+  containers:
+  - name: main-container
+    image: alpine 
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do date >> /var/log/index.html; sleep 10;done"]
+    volumeMounts:
+    - name: shared-logs
+      mountPath: /var/log
+  - name: sidecar-container
+    image: nginx
+    ports:
+      - containerPort: 80
+    volumeMounts:
+    - name: shared-logs
+      mountPath: /usr/share/nginx/html 
+
+
+
+vi adapter.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: adapter
+spec:
+  volumes:
+  - name: shared-logs 
+    emptyDir: {}
+  containers:
+  - name: main-container
+    image: alpine
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do date > /var/log/top.txt && top -n 1 -b >> /var/log/top.txt; sleep 10;done"]
+    volumeMounts:
+    - name: shared-logs
+      mountPath: /var/log
+  - name: adapter-container
+    image: alpine
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do (cat /var/log/top.txt | head -1 > /var/log/status.txt) && (cat /var/log/top.txt | head -2 | tail -1 | grep
+ -o -E '\\d+\\w' | head -1 >> /var/log/status.txt) && (cat /var/log/top.txt | head -3 | tail -1 | grep
+-o -E '\\d+%' | head -1 >> /var/log/status.txt); sleep 5; done"]
+    volumeMounts:
+    - name: shared-logs
+      mountPath: /var/log
+
+
+vi ambassador.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ambassador-pod
+  labels:
+    app: ambassador-app
+spec:
+  volumes:
+  - name: shared
+    emptyDir: {}
+  containers:
+  - name: app-container-poller
+    image: yauritux/busybox-curl
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do curl 127.0.0.1:81 > /usr/share/nginx/html/index.html; sleep 10; done"]
+    volumeMounts:
+    - name: shared
+      mountPath: /usr/share/nginx/html
+  - name: app-container-server
+    image: nginx
+    ports:
+      - containerPort: 80
+    volumeMounts:
+    - name: shared
+      mountPath: /usr/share/nginx/html
+  - name: ambassador-container
+    image: bharamicrosystems/nginx-forward-proxy
+    ports:
+      - containerPort: 81
+
+
+---------------------------------------------------------------
+# Task 3 Create a pod using below yaml
 ---------------------------------------------------------------
 
 vi httpd-pod.yaml
@@ -41,7 +194,7 @@ kubectl describe pod httpd-pod
 
 
 ----------------------------------------------------------------------
-#Task 2  Setup ClusterIP service
+#Task 4  Setup ClusterIP service
 ----------------------------------------------------------------------
 
 # Create  a ClusterIP service using below YAML
@@ -89,7 +242,7 @@ ssh -t ubuntu@<Node_IP> curl <Cluster_IP>:<Service_Port>
 
 
 ------------------------------------------------------------------------------
-#Task 3  Setup NodePort Service
+#Task 5  Setup NodePort Service
 ------------------------------------------------------------------------------
 
 # Modify the service created in the previous task to type NodePort
@@ -131,7 +284,7 @@ kubectl get nodes -o wide | awk '{print $7}'
 
 ssh -t ubuntu@<Node_IP> curl <Cluster_IP>:<Service_Port>
 ------------------------------------------------------------------------------------
-#Task 4  Setup LoadBalancer Service
+#Task 6  Setup LoadBalancer Service
 ------------------------------------------------------------------------------------
 
  # Modify the service created in the previous task to type LoadBalancer 
@@ -173,7 +326,7 @@ curl <LoadBalancer_DNS>
 
 
 -------------------------------------------------------------------------------
-#Task 5 Delete and recreate httpd Pod
+#Task 7 Delete and recreate httpd Pod
 -------------------------------------------------------------------------------
 # Delete the existing httpd-pod using below
 
@@ -192,7 +345,7 @@ kubectl describe svc httpd-svc
 
 
 --------------------------------------------------------------------------------
-#Task 6 Cleanup the resources using below command
+#Task 8 Cleanup the resources using below command
 ----------------------------------------------------------------------------------
 
 kubectl delete -f httpd-pod.yaml
