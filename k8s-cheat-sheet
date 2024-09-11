@@ -369,6 +369,9 @@ kubectl expose pod httpd --name httpd-svc --port 80 --target-port 80
 kubectl run nginx --image nginx --port 80
 kubectl expose pod nginx --name nginx-svc --port 80 --target-port 80
 
+#Install the ingress controller first if it is not available on the cluster as an add-on using following command.
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
 
 #Creating an Ingress Resource
 #Create an Ingress Object
