@@ -351,6 +351,75 @@ kubectl describe svc httpd-svc
 kubectl delete -f httpd-pod.yaml
 kubectl delete -f httpd-svc.yaml
 
+
+--------------------------------------------------------------------------------
+Task 9  Ingress Controller
+--------------------------------------------------------------------------------
+
+#Deploy and Expose an HTTPD Application
+#Deploy an `httpd` application and expose it via a ClusterIP service.
+
+kubectl run httpd --image httpd --port 80
+kubectl expose pod httpd --name httpd-svc --port 80 --target-port 80
+
+
+#Deploy and Expose an NGINX Application
+#Deploy an `nginx` application and expose it via a ClusterIP service.
+
+kubectl run nginx --image nginx --port 80
+kubectl expose pod nginx --name nginx-svc --port 80 --target-port 80
+
+
+#Creating an Ingress Resource
+#Create an Ingress Object
+
+#Create an Ingress object to route traffic to the `httpd` and `nginx` services.
+
+vi ingress.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: default
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: httpd-svc
+            port:
+              number: 80
+      - path: /testpath
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-svc
+            port:
+              number: 80
+
+
+#Apply the Ingress Configuration
+
+kubectl apply -f ingress.yaml
+
+
+#Retrieve the Ingress Object
+#Run the following command to get details of the Ingress object in the default namespace.
+
+kubectl get ingress
+
+
+#Access the Applications via External IP
+#Copy the external IP assigned by MetalLB and access the applications using `curl`.
+
+curl <ExternalIP>
+curl <ExternalIP>/testpath
+
 =============================================================
 Lab 3: Deployment
 =============================================================
