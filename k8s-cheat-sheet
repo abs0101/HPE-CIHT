@@ -42,6 +42,12 @@ kubectl describe pod httpd-pod
 
 
 ----------------------------------------------------------------------
+//if you have downscaled the autoscaling services than run the below command
+kops export kubeconfig --admin
+
+// To enter into a Pod
+kubectl exec -it <podName> -- sh/bash
+
 #Task 4  Setup ClusterIP service
 ----------------------------------------------------------------------
 
